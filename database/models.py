@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from database.database import Base
+from database.Base import Base
 
 
 class User(Base):
@@ -12,6 +12,7 @@ class User(Base):
     username = Column(String, nullable=True)
     privileges = Column(String, nullable=False, default='users')
     created_at = Column(DateTime, default=func.now())
+    is_banned = Column(Boolean, default=False)
 
     subscriptions = relationship("Subscription", back_populates="user")
     logs = relationship("Logs", back_populates="user")
@@ -34,6 +35,7 @@ class NewsHeadline(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(Text, nullable=False)
     url = Column(String, unique=True, nullable=False)
+    category = Column(String, nullable=False)
     source_id = Column(Integer, ForeignKey("news_sources.id"), nullable=False)
     created_at = Column(DateTime, default=func.now())
 

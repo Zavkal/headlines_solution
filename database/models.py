@@ -36,6 +36,7 @@ class NewsHeadline(Base):
     title = Column(Text, nullable=False)
     url = Column(String, unique=True, nullable=False)
     category = Column(String, nullable=False)
+    date_published = Column(DateTime, nullable=False)
     source_id = Column(Integer, ForeignKey("news_sources.id"), nullable=False)
     created_at = Column(DateTime, default=func.now())
 

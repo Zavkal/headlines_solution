@@ -4,24 +4,11 @@ import aiogram.exceptions
 from aiogram import types, F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-
-from bot.keyboards.base_keyboards import select_gk_keyboard, back_base_menu, withdraw_ref_balance_keyboard, \
-    back_ref_menu, ozon_keyboard
 from bot.middleware.authorization import authorization
 
 # from bot.middleware.authorization import authorization
 
 router = Router(name="Базовая клавиатура")
-
-
-@router.callback_query(F.data == 'buy_gk')
-# @authorization(["creator", "administrator", "users"])
-async def buy_gk(callback_query: types.CallbackQuery):
-    try:
-        await callback_query.message.edit_text(text=f"Выбор оператора:",
-                                               reply_markup=select_gk_keyboard())
-    except aiogram.exceptions.TelegramBadRequest:
-        await callback_query.answer()
 
 
 @router.callback_query(F.data == 'buy_ozon_bank')
@@ -38,7 +25,6 @@ async def buy_ozon_bank(callback_query: types.CallbackQuery):
 @router.callback_query(F.data == 'about_text')
 @authorization(["creator", "administrator", "users"])
 async def buy_gk(callback_query: types.CallbackQuery):
-    # text = get_config().get('about') + "\n\nСпасибо, за то, что пользуетесь нашим сервисом!"
     await callback_query.message.edit_text(text='O nas',
                                            reply_markup=back_base_menu())
 
@@ -46,7 +32,6 @@ async def buy_gk(callback_query: types.CallbackQuery):
 @router.callback_query(F.data == 'faq_text')
 @authorization(["creator", "administrator", "users"])
 async def faq_text(callback_query: types.CallbackQuery):
-    # text = get_config().get('about') + "\n\nСпасибо, за то, что пользуетесь нашим сервисом!"
     await callback_query.message.edit_text(text='faq ....',
                                            reply_markup=back_base_menu())
 

@@ -1,4 +1,8 @@
+import asyncio
+
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup
+
+from database.repositories.news_sources_repo import news_sources_repository
 
 
 def start_base_panel():
@@ -10,27 +14,11 @@ def start_base_panel():
 
 def get_start_keyboard():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text='🌐 Источники 🌐', callback_data="")],
-        [InlineKeyboardButton(text='💸 Пополнить баланс 💸', callback_data="top_up_balance")],
+        [InlineKeyboardButton(text='🌐 Источники 🌐', callback_data="get_sources_hand")],
+        [InlineKeyboardButton(text='💸 Авто получение новостей 💸', callback_data="get_sources_auto")],
         [InlineKeyboardButton(text='🫂 О нас 🫂', callback_data="about_text")],
         [InlineKeyboardButton(text='📔 FAQ - функции бота. 📔', callback_data="faq_text")],
     ])
-
-    return keyboard
-
-
-def withdraw_ref_balance_keyboard(partner: bool = False):
-    if partner:
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=f'💸 Вывести реферальный баланс 💸', callback_data=f"withdraw_ref_balance:{partner}")],
-            [InlineKeyboardButton(text=f'⏪ Назад', callback_data="back_start_menu")],
-        ])
-    else:
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=f'💸 Вывести реферальный баланс 💸', callback_data=f"withdraw_ref_balance:{partner}")],
-            [InlineKeyboardButton(text=f'🧲 Получить вечную реферальную ссылку 🧲', callback_data="all_life_ref_link")],
-            [InlineKeyboardButton(text=f'⏪ Назад', callback_data="back_start_menu")],
-        ])
 
     return keyboard
 
@@ -39,6 +27,25 @@ def back_base_menu():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=f'⏪ Назад', callback_data="back_start_menu"),]
         ])
+
+    return keyboard
+
+
+def sources_menu(sources):
+    keyboard = InlineKeyboardMarkup(row_width=2, inline_keyboard=[])
+
+    for source in sources:
+        keyboard.inline_keyboard.append([
+            InlineKeyboardButton(
+                text=source["name"],
+                callback_data=f"get_headlines_hand:{source['id']}"
+            )
+        ])
+
+
+    keyboard.inline_keyboard.append(
+        [InlineKeyboardButton(text="🔙 Назад", callback_data="back_start_menu")],
+    )
 
     return keyboard
 

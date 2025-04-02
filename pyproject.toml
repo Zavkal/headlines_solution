@@ -16,7 +16,8 @@ dependencies = [
     "sqlalchemy[asyncio] (>=2.0.40,<3.0.0)",
     "requests (>=2.32.3,<3.0.0)",
     "bs4 (>=0.0.2,<0.0.3)",
-    "selenium-base (>=4.36.4,<5.0.0)"
+    "selenium-base (>=4.36.4,<5.0.0)",
+    "pytz (>=2025.2,<2026.0)"
 ]
 
 

@@ -6,7 +6,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from bot.config import DATABASE_URL
+from config import DATABASE_URL
 from database.Base import Base
 
 # this is the Alembic Config object, which provides
@@ -19,12 +19,12 @@ config.set_main_option("sqlalchemy.url", DATABASE_URL)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from database.models import User
-from database.models import Logs
-from database.models import NewsHeadline
-from database.models import NewsSource
-from database.models import Subscription
-
+from database.models import User # noqa
+from database.models import Logs # noqa
+from database.models import NewsHeadline # noqa
+from database.models import NewsSource # noqa
+from database.models import Subscription # noqa
+from database.models import BotConfig # noqa
 
 target_metadata = Base.metadata
 

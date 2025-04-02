@@ -8,7 +8,7 @@ from aiogram.types import CallbackQuery, Union
 from bot.keyboards.admin_keyboards import start_admin_panel
 from bot.keyboards.base_keyboards import get_start_keyboard, start_base_panel
 from bot.middleware.authorization import authorization
-from database.repositories.users_repo import UserRepository
+from database.repositories.users_repo import users_repo
 from database.session import db
 
 # from bot.middleware.authorization import authorization
@@ -23,10 +23,9 @@ router = Router(name="Старт бота")
 async def command_start_menu_handler(message: types.Message, state: FSMContext):
     await state.clear()
     telegram_id = message.from_user.id
-    async with db.session():
-        user_repo = UserRepository(db)
-        await user_repo.create_user(telegram_id=telegram_id,
-                                    username=message.from_user.username,)
+    await users_repo.create_user(telegram_id=telegram_id,
+                                username=message.from_user.username,
+                                 )
 
 
     await message.bot.send_message(chat_id=telegram_id,

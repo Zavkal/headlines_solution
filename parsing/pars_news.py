@@ -1,12 +1,19 @@
 import json
 
+from datetime import datetime
+import pytz
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 
 from bs4 import BeautifulSoup
 
 from aiohttp import ClientSession
-import asyncio
+
+from config import category_kommersnat
+from database.repositories.headlines_repo import HeadlinesRepository
+from database.repositories.news_sources_repo import NewsSourcesRepository
+from database.session import db
 
 
 class NewsClient:
@@ -39,13 +46,36 @@ class SeleniumFetcher:
         return page_html
 
 
-class ParsNews:
-    @staticmethod
-    async def parse_kommersant() -> None:
-        client = NewsClient()
-        for category_id in range(2, 10):
-            url = f"https://www.kommersant.ru/archive/rubric/{category_id}/day"
 
+class ParsNews:
+    news_sources = NewsSourcesRepository(db=db)
+    news_headlines = HeadlinesRepository(db=db)
+
+
+    @staticmethod
+    async def cut_url(url: str) -> str:
+        return '/'.join(url.split('/')[:3])
+
+
+    @staticmethod
+    async def convert_date_for_bloomberg_reuters(date_publ: str) -> datetime:
+        try:
+            utc_time = pytz.utc.localize(datetime.strptime(date_publ, "%Y-%m-%dT%H:%M:%SZ"))
+        except ValueError:
+            utc_time = pytz.utc.localize(datetime.strptime(date_publ, "%Y-%m-%dT%H:%M:%S.%fZ"))
+        moscow_time = utc_time.astimezone(pytz.timezone("Europe/Moscow"))
+        moscow_time = moscow_time.replace(tzinfo=None)
+        return moscow_time
+
+
+    @classmethod
+    async def parse_kommersant(cls) -> None:
+        client = NewsClient()
+
+        for category_id, value in category_kommersnat.items():
+            url = f"https://www.kommersant.ru/archive/rubric/{category_id}/day"
+            base_url = await cls.cut_url(url)
+            source_id = await cls.news_sources.get_source_id(url)
             html_text = await client.fetch_and_read_html_requests(url)
 
             soup = BeautifulSoup(html_text, "html.parser")
@@ -53,49 +83,69 @@ class ParsNews:
 
             for element in article_elements:
                 title = element["data-article-title"]
-                date = element.find("p", class_="uho__tag").get_text(strip=True)
-                article_link = element.find("a", class_="uho__link uho__link--overlay")['href']
-
+                date_publ = element.find("p", class_="uho__tag").get_text(strip=True)
+                article_link = base_url + element.find("a", class_="uho__link uho__link--overlay")['href']
+                date_obj = datetime.strptime(date_publ, "%d.%m.%Y, %H:%M")
+                async with db.session():
+                    await cls.news_headlines.create_news(title=title,
+                                                         url=article_link,
+                                                         date_published=date_obj,
+                                                         source_id=source_id,
+                                                         category=value)
         await client.close_session_aiohttp()
 
 
-    @staticmethod
-    async def parse_bloomberg() -> None:
+    @classmethod
+    async def parse_bloomberg(cls) -> None:
         url = "https://www.bloomberg.com/lineup-next/api/stories?limit=25&pageNumber=1&types=ARTICLE,FEATURE,INTERACTIVE,LETTER,EXPLAINERS"
+        base_url = await cls.cut_url(url)
         session_selenium = SeleniumFetcher()
         response = await session_selenium.fetch_and_read_html_selenium(url)
         soup = BeautifulSoup(response, "html.parser")
         pre_tag = soup.find("pre")
         json_data = json.loads((pre_tag.get_text(strip=True)))
+
+        source_id = await cls.news_sources.get_source_id(url)
+        category = 'world'
+
         for data in json_data:
             headline = data.get('headline')
-            url_headline = data.get('url')
+            url_headline = base_url + data.get('url')
             date_publ = data.get('publishedAt')
+            moscow_time = await cls.convert_date_for_bloomberg_reuters(date_publ)
+            async with db.session():
+                await cls.news_headlines.create_news(title=headline ,
+                                                     url=url_headline,
+                                                     date_published=moscow_time,
+                                                     source_id=source_id,
+                                                     category=category)
 
 
 
-    @staticmethod
-    async def parse_reuters() -> None:
+    @classmethod
+    async def parse_reuters(cls) -> None:
         session_selenium = SeleniumFetcher()
         url='https://www.reuters.com/pf/api/v3/content/fetch/articles-by-section-alias-or-id-v1?query={"offset":0,"section_id":"/world/","size":20,"uri":"/world/","website":"reuters"}&d=275&mxId=00000000&_website=reuters'
+        base_url = await cls.cut_url(url)
         response = await session_selenium.fetch_and_read_html_selenium(url)
         soup = BeautifulSoup(response, "html.parser")
         pre_tag = soup.find("pre")
         json_data = json.loads((pre_tag.get_text(strip=True)))
         json_data = json_data.get('result').get('articles')
+
+        source_id = await cls.news_sources.get_source_id(url)
+        category = 'world'
+
         for data in json_data:
             headline = data.get('title')
-            url_headline = data.get('canonical_url')
+            url_headline = base_url + data.get('canonical_url')
             date_publ = data.get('display_time')
+            moscow_time = await cls.convert_date_for_bloomberg_reuters(date_publ)
+            async with db.session():
+                await cls.news_headlines.create_news(title=headline ,
+                                                     url=url_headline,
+                                                     date_published=moscow_time,
+                                                     source_id=source_id,
+                                                     category=category)
 
 
-
-
-
-async def main():
-    parser = ParsNews()
-    await parser.parse_reuters()
-
-
-if __name__ == '__main__':
-    asyncio.run(main())

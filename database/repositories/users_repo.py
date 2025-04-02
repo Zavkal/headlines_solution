@@ -1,6 +1,6 @@
 from sqlalchemy.future import select
 from database.models import User
-from database.session import Database
+from database.session import Database, db
 
 
 class UserRepository:
@@ -49,15 +49,11 @@ class UserRepository:
             return None
 
 
-    async def get_status_ban(self, telegram_id: int) -> str | None:
+    async def is_user_banned(self, telegram_id: int) -> bool | None:
         async with self.db.session() as session:
             result = await session.execute(select(User).where(User.telegram_id == telegram_id))
             user = result.scalar()
-            if user.is_banned and user:
-                return 'banned'
-            else:
-                return None
-
+            return user.is_banned if user else None
 
     async def get_privileges(self, telegram_id: int) -> str:
         async with self.db.session() as session:
@@ -66,8 +62,7 @@ class UserRepository:
             return user.privileges if user else None
 
 
-
-
+users_repo = UserRepository(db)
 
 
 

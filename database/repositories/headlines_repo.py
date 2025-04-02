@@ -1,6 +1,8 @@
+from datetime import datetime
+
 from sqlalchemy.future import select
 from database.models import NewsHeadline
-from database.session import Database
+from database.session import Database, db
 
 
 class HeadlinesRepository:
@@ -8,15 +10,25 @@ class HeadlinesRepository:
         self.db = db
 
 
-    async def create_news(self, url: str) -> bool:
+    async def create_news(self,
+                          url: str,
+                          date_published: datetime,
+                          title: str,
+                          category: str,
+                          source_id: int) -> bool:
         async with self.db.session() as session:
             result = await session.execute(select(NewsHeadline).filter_by(url=url))
-            existing_headlines = result.scalar_one_or_none()  # Получаем первого пользователя или None, если нет
+            existing_headlines = result.scalar_one_or_none()
 
-            if existing_headlines:  # Если пользователь существует, возвращаем его
+            if existing_headlines:
                 return False
 
-            headlines = NewsHeadline(url=url)
+            headlines = NewsHeadline(url=url,
+                                     date_published=date_published,
+                                     title=title,
+                                     category=category,
+                                     source_id=source_id,
+                                     )
             session.add(headlines)
             await session.commit()
             return True
@@ -28,3 +40,6 @@ class HeadlinesRepository:
                 select(NewsHeadline).filter_by(source_id=source_id).order_by(NewsHeadline.id.desc()).limit(counter)
             )
             return result.scalars().all()
+
+
+headlines_repo = HeadlinesRepository(db)

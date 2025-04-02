@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Text, Float
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database.Base import Base
@@ -51,7 +51,6 @@ class Subscription(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     source_id = Column(Integer, ForeignKey("news_sources.id"), nullable=False)
     subscription_type = Column(String, nullable=False)  # Например, "daily" или "instant"
-    banned = Column(Boolean, nullable=False, default=False)
 
     user = relationship("User", back_populates="subscriptions")
     source = relationship("NewsSource", back_populates="subscriptions")
@@ -66,3 +65,14 @@ class Logs(Base):
     created_at = Column(DateTime, default=func.now())
 
     user = relationship("User", back_populates="logs")
+
+
+class BotConfig(Base):
+    __tablename__ = "bot_config"
+
+    id = Column(Integer, primary_key=True, index=True)
+    auto_parse_interval = Column(Integer, nullable=False, default=30)
+    subscription_price = Column(Float, default=0)
+    crypto_wallet = Column(String, nullable=True)
+    about_text_config = Column(String, nullable=False, default='Привет. Ты попал на новостного бота.')
+    faq_text_config = Column(String, nullable=False, default='Функционал бота:\n1. Возможность получать новости по запросу')

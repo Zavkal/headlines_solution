@@ -1,10 +1,8 @@
 from contextlib import asynccontextmanager
 
-from sqlalchemy import text
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-from bot.config import DATABASE_URL
+from config import DATABASE_URL
 from database.Base import Base
 
 

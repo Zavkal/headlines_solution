@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-
+creator_id = int(os.getenv('CREATOR_ID'))
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 bot = Bot(token=BOT_TOKEN)
@@ -17,7 +17,7 @@ DATABASE_URL = (f"postgresql+asyncpg://{os.getenv('DB_USER')}:{os.getenv('DB_PAS
 
 
 
-
+roles = ['users', 'administrator']
 
 category_kommersnat = {
     '2': 'politics',

@@ -14,8 +14,8 @@ def start_base_panel():
 
 def get_start_keyboard():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text='🌐 Источники 🌐', callback_data="get_sources_hand")],
-        [InlineKeyboardButton(text='💸 Авто получение новостей 💸', callback_data="get_sources_auto")],
+        [InlineKeyboardButton(text='🌐 Последние новости 🌐', callback_data="get_sources_hand")],
+        [InlineKeyboardButton(text='📢 Авто получение новостей 📢', callback_data="get_sources_auto")],
         [InlineKeyboardButton(text='🫂 О нас 🫂', callback_data="about_text")],
         [InlineKeyboardButton(text='📔 FAQ - функции бота. 📔', callback_data="faq_text")],
     ])
@@ -31,23 +31,7 @@ def back_base_menu():
     return keyboard
 
 
-def sources_menu(sources):
-    keyboard = InlineKeyboardMarkup(row_width=2, inline_keyboard=[])
 
-    for source in sources:
-        keyboard.inline_keyboard.append([
-            InlineKeyboardButton(
-                text=source["name"],
-                callback_data=f"get_headlines_hand:{source['id']}"
-            )
-        ])
-
-
-    keyboard.inline_keyboard.append(
-        [InlineKeyboardButton(text="🔙 Назад", callback_data="back_start_menu")],
-    )
-
-    return keyboard
 
 
 

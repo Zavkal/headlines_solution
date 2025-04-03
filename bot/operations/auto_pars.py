@@ -35,7 +35,7 @@ class AutoParser:
                 await asyncio.sleep(interval)
             except Exception as e:
                 await asyncio.sleep(10)
-                return f'Ошибка парсера:\n{e}'
+                text = f'Ошибка парсера:\n{e}'
 
 
     async def start(self) -> str:

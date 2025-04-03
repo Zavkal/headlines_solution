@@ -37,9 +37,13 @@ class HeadlinesRepository:
     async def get_news(self, source_id: int, counter: int) -> list[NewsHeadline]:
         async with self.db.session() as session:
             result = await session.execute(
-                select(NewsHeadline).filter_by(source_id=source_id).order_by(NewsHeadline.id.desc()).limit(counter)
+                select(NewsHeadline)
+                .filter_by(source_id=source_id)
+                .order_by(NewsHeadline.date_published.desc())  # Сортировка по дате
+                .limit(counter)
             )
-            return result.scalars().all()
+            result = result.scalars().all()
+            return [s.__dict__ for s in result]
 
 
 headlines_repo = HeadlinesRepository(db)

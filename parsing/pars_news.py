@@ -71,28 +71,29 @@ class ParsNews:
     @classmethod
     async def parse_kommersant(cls) -> None:
         client = NewsClient()
+        try:
+            for category_id, value in category_kommersnat.items():
+                url = f"https://www.kommersant.ru/archive/rubric/{category_id}/day"
+                base_url = await cls.cut_url(url)
+                source_id = await cls.news_sources.get_source_id(base_url)
+                html_text = await client.fetch_and_read_html_requests(url)
 
-        for category_id, value in category_kommersnat.items():
-            url = f"https://www.kommersant.ru/archive/rubric/{category_id}/day"
-            base_url = await cls.cut_url(url)
-            source_id = await cls.news_sources.get_source_id(url)
-            html_text = await client.fetch_and_read_html_requests(url)
+                soup = BeautifulSoup(html_text, "html.parser")
+                article_elements = soup.find_all("article", class_="uho rubric_lenta__item js-article")
 
-            soup = BeautifulSoup(html_text, "html.parser")
-            article_elements = soup.find_all("article", class_="uho rubric_lenta__item js-article")
-
-            for element in article_elements:
-                title = element["data-article-title"]
-                date_publ = element.find("p", class_="uho__tag").get_text(strip=True)
-                article_link = base_url + element.find("a", class_="uho__link uho__link--overlay")['href']
-                date_obj = datetime.strptime(date_publ, "%d.%m.%Y, %H:%M")
-                async with db.session():
-                    await cls.news_headlines.create_news(title=title,
-                                                         url=article_link,
-                                                         date_published=date_obj,
-                                                         source_id=source_id,
-                                                         category=value)
-        await client.close_session_aiohttp()
+                for element in article_elements:
+                    title = element["data-article-title"]
+                    date_publ = element.find("p", class_="uho__tag").get_text(strip=True)
+                    article_link = base_url + element.find("a", class_="uho__link uho__link--overlay")['href']
+                    date_obj = datetime.strptime(date_publ, "%d.%m.%Y, %H:%M")
+                    async with db.session():
+                        await cls.news_headlines.create_news(title=title,
+                                                             url=article_link,
+                                                             date_published=date_obj,
+                                                             source_id=source_id,
+                                                             category=value)
+        finally:
+            await client.close_session_aiohttp()
 
 
     @classmethod
@@ -105,7 +106,7 @@ class ParsNews:
         pre_tag = soup.find("pre")
         json_data = json.loads((pre_tag.get_text(strip=True)))
 
-        source_id = await cls.news_sources.get_source_id(url)
+        source_id = await cls.news_sources.get_source_id(base_url)
         category = 'world'
 
         for data in json_data:
@@ -133,7 +134,7 @@ class ParsNews:
         json_data = json.loads((pre_tag.get_text(strip=True)))
         json_data = json_data.get('result').get('articles')
 
-        source_id = await cls.news_sources.get_source_id(url)
+        source_id = await cls.news_sources.get_source_id(base_url)
         category = 'world'
 
         for data in json_data:

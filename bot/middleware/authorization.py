@@ -1,15 +1,14 @@
 from functools import wraps
 from aiogram import types
 
-from database.repositories.users_repo import UserRepository
-from database.session import db
+from config import creator_id
+from database.repositories.users_repo import users_repo
+
 
 
 async def get_user_role(telegram_id: int) -> str | None:
-    async with db.session() as session:
-        user_repo = UserRepository(session)
-        status_ban = await user_repo.get_status_ban(telegram_id)
-        privileges = await user_repo.get_privileges(telegram_id)
+    status_ban = await users_repo.is_user_banned(telegram_id)
+    privileges = await users_repo.get_privileges(telegram_id)
 
     return status_ban if status_ban else privileges
 
@@ -26,8 +25,8 @@ def authorization(required_roles: list[str]):
         async def wrapped(callback_query: types.CallbackQuery, *args, **kwargs):
             telegram_id = callback_query.from_user.id
 
-            if telegram_id == 1637636761: # gl.admin
-                role = 'administrator'
+            if telegram_id == creator_id: # gl.admin
+                role = 'creator'
             else:
                 role = await get_user_role(telegram_id)
 

@@ -23,7 +23,7 @@ from database.models import User # noqa
 from database.models import Logs # noqa
 from database.models import NewsHeadline # noqa
 from database.models import NewsSource # noqa
-from database.models import Subscription # noqa
+from database.models import SourcesSubscription # noqa
 from database.models import BotConfig # noqa
 
 target_metadata = Base.metadata

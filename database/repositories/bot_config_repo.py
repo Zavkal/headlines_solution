@@ -49,7 +49,7 @@ class BotConfigRepository:
 
 
 
-bot_config = BotConfig(db)
+bot_config = BotConfigRepository(db)
 
 
 

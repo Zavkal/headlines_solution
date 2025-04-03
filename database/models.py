@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Text, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Text, Float, BigInteger
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database.Base import Base
@@ -8,13 +8,13 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    telegram_id = Column(Integer, unique=True, nullable=False)
+    telegram_id = Column(BigInteger, unique=True, nullable=False)
     username = Column(String, nullable=True)
     privileges = Column(String, nullable=False, default='users')
     created_at = Column(DateTime, default=func.now())
     is_banned = Column(Boolean, default=False)
 
-    subscriptions = relationship("Subscription", back_populates="user")
+    subscriptions = relationship("SourcesSubscription", back_populates="user")
     logs = relationship("Logs", back_populates="user")
 
 
@@ -26,7 +26,7 @@ class NewsSource(Base):
     url = Column(String, unique=True, nullable=False)
 
     headlines = relationship("NewsHeadline", back_populates="source")
-    subscriptions = relationship("Subscription", back_populates="source")
+    subscriptions = relationship("SourcesSubscription", back_populates="source")
 
 
 class NewsHeadline(Base):
@@ -44,13 +44,12 @@ class NewsHeadline(Base):
 
 
 
-class Subscription(Base):
-    __tablename__ = "subscriptions"
+class SourcesSubscription(Base):
+    __tablename__ = "sources_subscriptions"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    telegram_id = Column(BigInteger, ForeignKey("users.telegram_id"), nullable=False)
     source_id = Column(Integer, ForeignKey("news_sources.id"), nullable=False)
-    subscription_type = Column(String, nullable=False)  # Например, "daily" или "instant"
 
     user = relationship("User", back_populates="subscriptions")
     source = relationship("NewsSource", back_populates="subscriptions")

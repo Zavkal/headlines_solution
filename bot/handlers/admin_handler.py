@@ -4,14 +4,14 @@ from aiogram import types, F, Router
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputFile, FSInputFile
 from aiogram.types import CallbackQuery, Union
 
 from bot.keyboards.admin_keyboards import get_admin_management_keyboard, admin_panel_keyboard, manage_admin_keyboard, \
     change_role_keyboard, delete_message_keyboard, edit_bot_description_about_keyboard, add_privilege_keyboard
+from bot.logger import logger
 from bot.middleware.authorization import authorization
 from bot.operations.auto_pars import auto_parser
-from config import roles
+
 from database.repositories.admins_repo import admin_repo
 from database.repositories.bot_config_repo import bot_config
 from database.repositories.users_repo import users_repo
@@ -30,6 +30,8 @@ class NewFaqBot(StatesGroup):
 class NewAboutBot(StatesGroup):
     waiting_about = State()
 
+class NewTimerParser(StatesGroup):
+    waiting_time = State()
 
 class PrivilegeManagement(StatesGroup):
     waiting_telegram_id = State()
@@ -176,7 +178,7 @@ async def get_ban_unban_user_state(message: types.Message, state: FSMContext):
         await mess_del.delete()
         await state.clear()
     except Exception as e:
-        print(e)
+        logger.error(e)
         msg = await message.answer('Введите id пользователя и ничего более.')
         await asyncio.sleep(2)
         await msg.delete()
@@ -248,10 +250,17 @@ async def all_send_message(callback: types.CallbackQuery, state: FSMContext):
 
 @router.message(NewMessageForAll.waiting_message)
 async def all_send_message_state(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    mess_del = data.get('mess_del')
     telegram_ids = await users_repo.get_all_users()
     for telegram_id in telegram_ids:
-        await message.bot.send_message(chat_id=telegram_id,
-                                       text=message.text)
+        try:
+            await message.bot.send_message(chat_id=telegram_id,
+                                           text=message.text)
+        except TelegramBadRequest:
+            pass
+    await mess_del.delete()
+    await message.delete()
     await state.clear()
 
 
@@ -260,3 +269,58 @@ async def all_send_message_state(message: types.Message, state: FSMContext):
 async def delete_message(callback_query: types.CallbackQuery, state: FSMContext):
     await state.clear()
     await callback_query.message.delete()
+
+
+@router.callback_query(F.data == "restart_parser")
+@authorization(["creator", "administrator"])
+async def restart_parser(callback_query: types.CallbackQuery, state: FSMContext):
+    await state.clear()
+    try:
+        await auto_parser.restart()
+        msg_del = await callback_query.message.answer('Парсер успешно перезапущен.')
+        await asyncio.sleep(2)
+        await msg_del.delete()
+
+    except Exception as e:
+        logger.exception(e)
+        msg_del = await callback_query.message.answer('Ошибка при перезапуске парсера')
+        await asyncio.sleep(2)
+        await msg_del.delete()
+    await callback_query.message.delete()
+
+
+@router.callback_query(F.data == "edit_time_auto_pars")
+@authorization(["creator", "administrator"])
+async def edit_time_auto_pars(callback_query: types.CallbackQuery, state: FSMContext):
+    await state.clear()
+    msg_del = await callback_query.message.answer(text='Введите новое время в минутах от 1 до 120.', reply_markup=delete_message_keyboard())
+    await state.update_data(callback_query=callback_query, msg_del=msg_del)
+    await state.set_state(NewTimerParser.waiting_time)
+
+
+@router.message(NewTimerParser.waiting_time)
+async def edit_time_auto_pars_state(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    callback_query = data['callback_query']
+    msg_del = data['msg_del']
+
+    try:
+        time = int(message.text)
+        await message.delete()
+        if 1 < time < 121:
+            await bot_config.edit_interval_auto_pars(time=time)
+            await callback_query.message.edit_text(text=f'Время авто парсинга каждые {time} минут.',
+                                    reply_markup=edit_bot_description_about_keyboard(),
+                                    )
+
+        else:
+            mes_del = await message.answer('Число не может быть больше или меньше данного диапазона!')
+            await asyncio.sleep(2)
+            await mes_del.delete()
+
+    except ValueError:
+        mes_del = await message.answer('Ввести можно только цифры!')
+        await asyncio.sleep(2)
+        await mes_del.delete()
+        await message.delete()
+    await msg_del.delete()

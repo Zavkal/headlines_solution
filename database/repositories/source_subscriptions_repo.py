@@ -53,4 +53,28 @@ class SourcesSubscriptionRepository:
                 return False
 
 
+    async def get_users_and_subscriptions(self):
+        user_subscriptions = []
+
+        async with self.db.session() as session:
+            stmt = select(SourcesSubscription.telegram_id, SourcesSubscription.source_id)
+            response = await session.execute(stmt)
+            subscriptions_dict = {}
+
+            for telegram_id, source_id in response.all():
+                if telegram_id not in subscriptions_dict:
+                    subscriptions_dict[telegram_id] = []
+                subscriptions_dict[telegram_id].append(source_id)
+
+            # Преобразуем в список словарей в нужном формате
+            for telegram_id, source_ids in subscriptions_dict.items():
+                user_subscriptions.append({
+                    'telegram_id': telegram_id,
+                    'source_id': source_ids
+                })
+
+        return user_subscriptions
+
+
+
 sources_subscriptions = SourcesSubscriptionRepository(db)

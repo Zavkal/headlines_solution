@@ -32,6 +32,14 @@ class NewsSourcesRepository:
             return result.url
 
 
+    async def get_dict_source_name_by_id(self) -> dict:
+        async with self.db.session() as session:
+            result = await session.execute(select(NewsSource))
+            sources = result.scalars().all()
+            source_dict = {source.id: source.name for source in sources}
+
+            return source_dict
+
 
 
 news_sources_repository = NewsSourcesRepository(db)

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from aiogram import Router, types, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
@@ -8,7 +6,7 @@ from aiogram.types import CallbackQuery, Union
 from bot.keyboards.admin_keyboards import start_admin_panel
 from bot.keyboards.base_keyboards import get_start_keyboard, start_base_panel
 from bot.middleware.authorization import authorization
-from config import creator_id
+from bot.config import creator_id
 from database.repositories.users_repo import users_repo
 
 router = Router(name="Старт бота")

@@ -15,13 +15,13 @@ class HeadlinesRepository:
                           date_published: datetime,
                           title: str,
                           category: str,
-                          source_id: int) -> bool:
+                          source_id: int) -> NewsHeadline | None:
         async with self.db.session() as session:
             result = await session.execute(select(NewsHeadline).filter_by(url=url))
             existing_headlines = result.scalar_one_or_none()
 
             if existing_headlines:
-                return False
+                return None
 
             headlines = NewsHeadline(url=url,
                                      date_published=date_published,
@@ -31,7 +31,7 @@ class HeadlinesRepository:
                                      )
             session.add(headlines)
             await session.commit()
-            return True
+            return headlines
 
 
     async def get_news(self, source_id: int, counter: int) -> list[NewsHeadline]:

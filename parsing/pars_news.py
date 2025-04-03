@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 
 from aiohttp import ClientSession
 
-from config import category_kommersnat
+from bot.config import category_kommersnat
 from database.repositories.headlines_repo import HeadlinesRepository
 from database.repositories.news_sources_repo import NewsSourcesRepository
 from database.session import db
@@ -69,8 +69,9 @@ class ParsNews:
 
 
     @classmethod
-    async def parse_kommersant(cls) -> None:
+    async def parse_kommersant(cls) -> list:
         client = NewsClient()
+        kommersant_list = []
         try:
             for category_id, value in category_kommersnat.items():
                 url = f"https://www.kommersant.ru/archive/rubric/{category_id}/day"
@@ -87,17 +88,19 @@ class ParsNews:
                     article_link = base_url + element.find("a", class_="uho__link uho__link--overlay")['href']
                     date_obj = datetime.strptime(date_publ, "%d.%m.%Y, %H:%M")
                     async with db.session():
-                        await cls.news_headlines.create_news(title=title,
+                        kommersant_list.append(await cls.news_headlines.create_news(title=title,
                                                              url=article_link,
                                                              date_published=date_obj,
                                                              source_id=source_id,
-                                                             category=value)
+                                                             category=value))
         finally:
             await client.close_session_aiohttp()
+            return kommersant_list
 
 
     @classmethod
-    async def parse_bloomberg(cls) -> None:
+    async def parse_bloomberg(cls) -> list:
+        bloomberg_list = []
         url = "https://www.bloomberg.com/lineup-next/api/stories?limit=25&pageNumber=1&types=ARTICLE,FEATURE,INTERACTIVE,LETTER,EXPLAINERS"
         base_url = await cls.cut_url(url)
         session_selenium = SeleniumFetcher()
@@ -115,19 +118,21 @@ class ParsNews:
             date_publ = data.get('publishedAt')
             moscow_time = await cls.convert_date_for_bloomberg_reuters(date_publ)
             async with db.session():
-                await cls.news_headlines.create_news(title=headline ,
+                bloomberg_list.append(await cls.news_headlines.create_news(title=headline ,
                                                      url=url_headline,
                                                      date_published=moscow_time,
                                                      source_id=source_id,
-                                                     category=category)
+                                                     category=category))
 
+        return bloomberg_list
 
 
     @classmethod
-    async def parse_reuters(cls) -> None:
-        session_selenium = SeleniumFetcher()
+    async def parse_reuters(cls) -> list:
+        reuters_list = []
         url='https://www.reuters.com/pf/api/v3/content/fetch/articles-by-section-alias-or-id-v1?query={"offset":0,"section_id":"/world/","size":20,"uri":"/world/","website":"reuters"}&d=275&mxId=00000000&_website=reuters'
         base_url = await cls.cut_url(url)
+        session_selenium = SeleniumFetcher()
         response = await session_selenium.fetch_and_read_html_selenium(url)
         soup = BeautifulSoup(response, "html.parser")
         pre_tag = soup.find("pre")
@@ -143,10 +148,11 @@ class ParsNews:
             date_publ = data.get('display_time')
             moscow_time = await cls.convert_date_for_bloomberg_reuters(date_publ)
             async with db.session():
-                await cls.news_headlines.create_news(title=headline ,
+                reuters_list.append(await cls.news_headlines.create_news(title=headline ,
                                                      url=url_headline,
                                                      date_published=moscow_time,
                                                      source_id=source_id,
-                                                     category=category)
+                                                     category=category))
 
+        return reuters_list
 

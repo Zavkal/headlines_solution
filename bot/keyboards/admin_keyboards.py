@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup
 
-from config import roles
+from bot.config import roles
 from database.repositories.admins_repo import admin_repo
 
 
@@ -92,7 +92,7 @@ def change_role_keyboard(user_id: int):
 def edit_bot_description_about_keyboard():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=f'Перезапустить парсер', callback_data=f"restart_parser"),],
-        [InlineKeyboardButton(text=f'Изменить таймер автопарсинга', callback_data=f"edit_bot_description"),],
+        [InlineKeyboardButton(text=f'Изменить таймер автопарсинга', callback_data=f"edit_time_auto_pars"),],
         [InlineKeyboardButton(text=f'Задать текст бота (гл.Меню)', callback_data=f"edit_bot_about"),],
         [InlineKeyboardButton(text=f'Задать описание бота (FAQ)', callback_data=f"edit_bot_faq"),],
         [InlineKeyboardButton(text=f'💬 Отправить сообщение всем', callback_data=f"all_send_message"),],

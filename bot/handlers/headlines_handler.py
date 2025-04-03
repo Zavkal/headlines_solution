@@ -1,18 +1,13 @@
 import asyncio
 
-import aiogram.exceptions
 from aiogram import types, F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from bot.handlers.start_handler import command_start_menu_handler
-from bot.keyboards.base_keyboards import back_base_menu
 from bot.keyboards.headlines_keyboard import sources_menu_auto
 from bot.middleware.authorization import authorization
 from bot.operations.generate_text_headlines import generate_text
-from config import dp
 from database.repositories.headlines_repo import headlines_repo
-from database.repositories.news_sources_repo import news_sources_repository
 from database.repositories.source_subscriptions_repo import sources_subscriptions
 
 router = Router(name="Выдача заголовков")
@@ -46,15 +41,19 @@ async def get_headlines_hand_state(message: types.Message, state: FSMContext):
     await message.delete()
     try:
         counter = int(message.text)
-        headlines = await headlines_repo.get_news(source_id=source_id, counter=counter)
-        for headline in headlines:
-            text = await generate_text(headline=headline, source_name=source_name)
-            await message.answer(text=text,
-                                 parse_mode='HTML',
-                                 disable_web_page_preview=True)
+        if  1 < counter < 21:
+            headlines = await headlines_repo.get_news(source_id=source_id, counter=counter)
+            for headline in headlines:
+                text = await generate_text(headline=headline, source_name=source_name)
+                await message.answer(text=text,
+                                     parse_mode='HTML',
+                                     disable_web_page_preview=True)
+            await msg_callback.delete()
 
-        await msg_callback.delete()
-
+        else:
+            msg_del = await message.answer(text='Введите число не более 20 и не менее 1')
+            await asyncio.sleep(2)
+            await msg_del.delete()
 
     except Exception:
         msg_del = await message.answer('Введите число. Другие данные бот не принимает.')

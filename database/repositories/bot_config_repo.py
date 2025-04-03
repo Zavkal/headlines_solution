@@ -17,6 +17,15 @@ class BotConfigRepository:
             return config.auto_parse_interval
 
 
+    async def edit_interval_auto_pars(self, time: int) -> None:
+        async with self.db.session() as session:
+            config = await session.execute(select(BotConfig))
+            config = config.scalars().first()
+            if config:
+                config.auto_parse_interval = time
+                await session.commit()
+
+
     async def get_about_text(self) -> str:
         async with self.db.session() as session:
             config = await session.execute(select(BotConfig))
@@ -33,7 +42,8 @@ class BotConfigRepository:
 
     async def edit_about_text(self, text: str) -> None:
         async with self.db.session() as session:
-            config = await session.get(BotConfig, 1)  # Получаем запись с ID = 1
+            config = await session.execute(select(BotConfig))
+            config = config.scalars().first()
             if config:
                 config.about_text_config = text
                 await session.commit()
@@ -41,7 +51,8 @@ class BotConfigRepository:
 
     async def edit_faq_text(self, text: str) -> None:
         async with self.db.session() as session:
-            config = await session.get(BotConfig, 1)  # Получаем запись с ID = 1
+            config = await session.execute(select(BotConfig))
+            config = config.scalars().first()
             if config:
                 config.faq_text_config = text
                 await session.commit()

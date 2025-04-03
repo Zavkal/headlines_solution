@@ -1,7 +1,7 @@
 from functools import wraps
 from aiogram import types
 
-from config import creator_id
+from bot.config import creator_id
 from database.repositories.users_repo import users_repo
 
 

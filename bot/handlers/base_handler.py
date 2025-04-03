@@ -53,13 +53,3 @@ async def faq_text(callback_query: types.CallbackQuery,
                                            reply_markup=back_base_menu())
 
 
-@router.callback_query(F.data == 'all_life_ref_link')
-@authorization(["creator", "administrator", "users"])
-async def all_life_ref_link(callback_query: types.CallbackQuery,
-                             state: FSMContext,
-                             ) -> None:
-    bot_name = await callback_query.bot.get_me()
-    await callback_query.message.edit_text(text=f'Ваша реферальная ссылка:\n\n'
-                                                f'https://t.me/{bot_name.username}?start={callback_query.from_user.id}',
-                                           reply_markup=back_base_menu())
-

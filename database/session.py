@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy import select
 
 from bot.config import DATABASE_URL
 from database.Base import Base
+from database.models import BotConfig, NewsSource
 
 
 class Database:
@@ -44,8 +46,25 @@ class Database:
         finally:
             await async_session.close()
 
+
     async def get_session(self) -> AsyncSession:
         return self._async_session()
+
+
+    async def seed_data(self):
+        async with self.session() as session:
+            config_exists = await session.execute(select(BotConfig))
+            if not config_exists.scalars().first():
+                session.add(BotConfig())  # все дефолтное
+
+            sources_exists = await session.execute(select(NewsSource))
+            if not sources_exists.scalars().first():
+                session.add_all([
+                    NewsSource(name="Bloomberg", url="https://www.bloomberg.com"),
+                    NewsSource(name="Reuters", url="https://www.reuters.com"),
+                    NewsSource(name="Коммерсант", url="https://www.kommersant.ru"),
+                ])
+
 
 
 db = Database(DATABASE_URL)

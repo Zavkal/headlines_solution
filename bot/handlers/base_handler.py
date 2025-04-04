@@ -8,6 +8,7 @@ from aiogram.fsm.state import State, StatesGroup
 from bot.keyboards.base_keyboards import back_base_menu
 from bot.keyboards.headlines_keyboard import sources_menu_auto, sources_menu
 from bot.middleware.authorization import authorization
+from database.repositories.bot_config_repo import bot_config
 from database.repositories.news_sources_repo import news_sources_repository
 from database.repositories.source_subscriptions_repo import sources_subscriptions
 
@@ -40,7 +41,7 @@ async def about_text(callback_query: types.CallbackQuery,
                              state: FSMContext,
                              ) -> None:
 
-    await callback_query.message.edit_text(text='O nas',
+    await callback_query.message.edit_text(text=await bot_config.get_about_text(),
                                            reply_markup=back_base_menu())
 
 
@@ -49,7 +50,7 @@ async def about_text(callback_query: types.CallbackQuery,
 async def faq_text(callback_query: types.CallbackQuery,
                              state: FSMContext,
                              ) -> None:
-    await callback_query.message.edit_text(text='faq ....',
+    await callback_query.message.edit_text(text=await bot_config.get_faq_text(),
                                            reply_markup=back_base_menu())
 
 

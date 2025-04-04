@@ -7,9 +7,11 @@ from bot.handlers.headlines_handler import router as headlines_handler
 from bot.handlers.admin_handler import router as admin_handler
 from bot.logger import logger
 from bot.operations.auto_pars import auto_parser
+from database.session import db
 
 
 async def main():
+    await db.seed_data()
     await auto_parser.start()
     dp.include_routers(
         start_handler,

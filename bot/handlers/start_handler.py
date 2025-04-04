@@ -30,7 +30,7 @@ async def command_start_menu_handler(message: types.Message, state: FSMContext):
 
 
     await message.bot.send_message(chat_id=telegram_id,
-                                   text=f"Привет. Ты попал на новостной бот headlines.\n\n"
+                                   text=f"Ты попал на новостной бот headlines.\n\n"
                                         f"Ознакомиться с работой бота можно в - FAQ\n\n"
                                         f"Данный бот предназначен для получения новостей в самостоятельно или автоматическом режиме.\n",
                                    reply_markup=get_start_keyboard())
@@ -43,13 +43,13 @@ async def start_menu_handler(event: Union[types.Message, CallbackQuery], state: 
     await state.clear()
     try:
         await event.message.edit_text(
-            text=f"Привет. Ты попал на новостной бот headlines.\n\n"
+            text=f"Ты попал на новостной бот headlines.\n\n"
                                         f"Ознакомиться с работой бота можно в - FAQ\n\n"
                                         f"Данный бот предназначен для получения новостей в самостоятельно или автоматическом режиме.\n",
             reply_markup=get_start_keyboard())
     except:
         await event.answer(
-            text=f"Привет. Ты попал на новостной бот headlines.\n\n"
+            text=f"Ты попал на новостной бот headlines.\n\n"
                                         f"Ознакомиться с работой бота можно в - FAQ\n\n"
                                         f"Данный бот предназначен для получения новостей в самостоятельно или автоматическом режиме.\n",
             reply_markup=get_start_keyboard())
